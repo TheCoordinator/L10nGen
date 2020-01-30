@@ -2,18 +2,18 @@ import Files
 import Foundation
 
 final class Helper {
-    static func createAndDeleteSubfolderIfNeeded(in folderPath: String, withName name: String) throws -> Folder {
-        let folder = try Folder(path: folderPath)
-        return try self.createAndDeleteSubfolderIfNeeded(in: folder, withName: name)
-    }
-
-    static func createAndDeleteSubfolderIfNeeded(in folder: Folder, withName name: String) throws -> Folder {
-        if folder.containsSubfolder(named: name) {
-            let subfolder = try folder.subfolder(named: name)
-            try subfolder.delete()
+    static func recreateFolder(in path: String) throws -> Folder {
+        guard let folder = try? Folder(path: path) else {
+            return try createFolder(in: path)
         }
 
-        return try folder.createSubfolderIfNeeded(withName: name)
+        try folder.delete()
+        return try createFolder(in: path)
+    }
+
+    static func createFolder(in path: String) throws -> Folder {
+        try FileManager().createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
+        return try Folder(path: path)
     }
 
     static func createFile(in folder: Folder, fileName: String, contents: String) throws {
@@ -22,24 +22,24 @@ final class Helper {
     }
 
     static func envVariable(_ key: String) -> String {
-        return ProcessInfo.processInfo.environment[key] ?? ""
+        ProcessInfo.processInfo.environment[key] ?? ""
     }
 
     static func log(_ msg: String) {
-        print("L10nGenerator: \(msg)")
+        print("L10nGen: \(msg)")
     }
 }
 
 extension String {
     func indented(with spaces: Int = 4) -> String {
         let indention = (0 ..< spaces).reduce("") { res, _ in "\(res) " }
-        let newLinesIndented = self.replacingOccurrences(of: "\n",
-                                                         with: "\(indention)\n")
+        let newLinesIndented = replacingOccurrences(of: "\n",
+                                                    with: "\(indention)\n")
 
         return "\(indention)\(newLinesIndented)"
     }
 
     var nilIfEmpty: String? {
-        return self.isEmpty ? nil : self
+        isEmpty ? nil : self
     }
 }

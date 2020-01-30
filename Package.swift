@@ -9,7 +9,8 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .executable(
             name: "L10nGen",
-            targets: ["L10nGen"])
+            targets: ["L10nGen"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/JohnSundell/Files.git", from: "4.1.1"),
@@ -21,8 +22,9 @@ let package = Package(
             name: "L10nGen",
             dependencies: [
                 "Files",
-                "SwiftyJSON"
+                "SwiftyJSON",
+                "Yams",
             ]
-        )
+        ),
     ]
 )

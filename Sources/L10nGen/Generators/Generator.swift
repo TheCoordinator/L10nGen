@@ -1,9 +1,16 @@
 import Foundation
 import SwiftyJSON
 
-protocol Generator {
-    var json: JSON { get }
+protocol Generating {
     var templates: Templates { get }
 
     func generate() -> String
+}
+
+protocol FeatureContentGenerating: Generating {
+    var feature: FeatureJson { get }
+}
+
+protocol L10nContentGenerating: Generating {
+    var allFeatures: AllFeatures { get }
 }

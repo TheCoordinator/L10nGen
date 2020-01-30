@@ -24,10 +24,10 @@ enum ParamType: String {
     static let allValues: [ParamType] = [.string, .integer, .float]
 }
 
-struct ParamContentGenerator: Generator {
+struct ParamContentGenerator: FeatureContentGenerating {
     private typealias ParamValue = (rawParam: String, name: String, index: Int, type: ParamType)
 
-    let json: JSON
+    let feature: FeatureJson
     let templates: Templates
 
     private let paramRegex: NSRegularExpression = {
@@ -47,7 +47,7 @@ struct ParamContentGenerator: Generator {
     // MARK: Private Methods
 
     private func values(isAttributed: Bool) -> [String] {
-        return self.json
+        feature.json
             .filter { $0.0.hasSuffix("__Param") || $0.0.hasSuffix("__PluralParam") }
             .compactMap { key, json in
                 let isPlural = key.hasSuffix("__PluralParam")
@@ -75,13 +75,28 @@ struct ParamContentGenerator: Generator {
             return nil
         }
 
-        let argsInputs = self.argInputs(from: allParamValues, isAttributed: isAttributed)
-        let args = self.args(from: allParamValues)
+        let argsInputs = argInputs(from: allParamValues, isAttributed: isAttributed)
+        let args = self.args(from: allParamValues, isAttributed: isAttributed)
+
+        let enumKey = feature.enumKey(for: key)
+
+        let values: String = {
+            if let stringValue = json.string {
+                return stringValue
+            }
+
+            return json.dictionaryValue
+                .compactMap { "\($0.key): \($0.value.stringValue)" }
+                .sorted()
+                .joined(separator: "\n\t\t ")
+        }()
 
         return template
             .replacingOccurrences(of: "{Key}", with: key)
+            .replacingOccurrences(of: "{EnumKey}", with: enumKey)
             .replacingOccurrences(of: "{ArgInputs}", with: argsInputs)
             .replacingOccurrences(of: "{Args}", with: args)
+            .replacingOccurrences(of: "{Value}", with: values)
     }
 
     private func stringValue(from json: JSON) -> String? {
@@ -95,7 +110,7 @@ struct ParamContentGenerator: Generator {
     }
 
     private func allParamValues(from value: String) -> [ParamValue] {
-        let regex = self.paramRegex
+        let regex = paramRegex
 
         let matches = regex.matches(
             in: value,
@@ -110,7 +125,7 @@ struct ParamContentGenerator: Generator {
         let nsValue = NSString(string: value)
 
         let allMatches: [ParamValue] = matches.enumerated().compactMap {
-            return self.paramValue(from: $0.element, matchIndex: $0.offset, value: nsValue)
+            self.paramValue(from: $0.element, matchIndex: $0.offset, value: nsValue)
         }
 
         var retVal = [ParamValue]()
@@ -154,7 +169,7 @@ struct ParamContentGenerator: Generator {
     }
 
     private func string(from nsString: NSString, at range: NSRange) -> String? {
-        guard range.location != NSNotFound && range.length > 0 else {
+        guard range.location != NSNotFound, range.length > 0 else {
             return nil
         }
 
@@ -165,7 +180,7 @@ struct ParamContentGenerator: Generator {
         let retVal: [String] = {
             if isAttributed {
                 return values
-                    .map { "\($0.name): AttributedStringParam<\($0.type.stringValue)>" }
+                    .map { "\($0.name)Attributed: AttributedStringParam<\($0.type.stringValue)>" }
             } else {
                 return values
                     .map { "\($0.name): \($0.type.stringValue)" }
@@ -176,8 +191,10 @@ struct ParamContentGenerator: Generator {
             .joined(separator: ", ")
     }
 
-    private func args(from values: [ParamValue]) -> String {
-        let retVal = values.map { $0.name }
+    private func args(from values: [ParamValue], isAttributed: Bool) -> String {
+        let retVal = values.map {
+                isAttributed ? "\($0.name)Attributed" : $0.name
+            }
             .joined(separator: ", ")
 
         return "[\(retVal)]"
@@ -186,13 +203,13 @@ struct ParamContentGenerator: Generator {
     private func template(isPlural: Bool, isAttributed: Bool) -> String {
         switch (isPlural, isAttributed) {
         case (true, true):
-            return self.templates.pluralParamAttr
+            return templates.pluralParamAttr
         case (false, false):
-            return self.templates.param
+            return templates.param
         case (true, false):
-            return self.templates.pluralParam
+            return templates.pluralParam
         case (false, true):
-            return self.templates.paramAttr
+            return templates.paramAttr
         }
     }
 }

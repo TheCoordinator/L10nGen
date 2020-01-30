@@ -14,35 +14,39 @@ private struct LocalizableContent {
 }
 
 final class JsonImporter {
-    static func `import`(source: Folder, dest: Folder, infoPlistDest: Folder) throws {
-        try self.allJsonFiles(in: source)
+    static func `import`(using folders: Folders) throws {
+        try allJsonFiles(in: folders.jsonResources)
             .forEach { file in
                 let identifier = file.nameExcludingExtension == "base" ? "Base" : file.nameExcludingExtension
 
-                let rawJson = try self.json(from: file)
-                let filteredJson = self.filter(json: rawJson)
-                let json = self.cleanUp(json: filteredJson)
-                let localizableContent = self.localizableContent(from: identifier, with: json)
+                let features = try self.json(from: file)
+                    .map(FeatureJson.init)
+                    .map(cleanUp)
+
+                let allFeatures = AllFeatures(features: features)
+
+                let localizableContent = self.localizableContent(from: identifier, with: allFeatures)
 
                 try self.createLocalizableFiles(
                     from: localizableContent,
-                    in: dest,
-                    infoPlistDest: infoPlistDest
+                    in: folders.stringResources,
+                    infoPlistDest: folders.infoPlistResources
                 )
             }
     }
 
-    static func baseJson(from source: Folder) throws -> JSON {
-        let file = try source.file(named: "base.json")
+    static func baseFeatures(from jsonResources: Folder) throws -> AllFeatures {
+        let file = try jsonResources.file(named: "base.json")
         let json = try self.json(from: file)
 
-        return self.filter(json: json)
+        let features = json.map(FeatureJson.init)
+        return AllFeatures(features: features)
     }
 
     // MARK: Private Methods
 
     private static func allJsonFiles(in folder: Folder) -> [File] {
-        return folder.files.filter { $0.extension == "json" }
+        folder.files.filter { $0.extension == "json" }
     }
 
     private static func json(from file: File) throws -> JSON {
@@ -50,32 +54,17 @@ final class JsonImporter {
         return try JSON(data: data)
     }
 
-    private static func filter(json: JSON) -> JSON {
-        var dict = (json.dictionaryObject ?? [:])
-            .filter {
-            let unsupportedPlatforms = L10nPlatforms.unsupported.map { $0.rawValue }
-            for each in unsupportedPlatforms where $0.key.hasSuffix(each) {
-                return false
-            }
+    private static func cleanUp(feature: FeatureJson) -> FeatureJson {
+        var dict = feature.json.dictionaryObject ?? [:]
 
-            return true
-        }
+        dict = cleanUpPlurals(from: dict)
+        dict = cleanUpParams(from: dict)
 
-        dict = self.remove(suffixes: [L10nPlatforms.iOS.rawValue], from: dict)
-        return JSON(dict)
-    }
-
-    private static func cleanUp(json: JSON) -> JSON {
-        var dict = json.dictionaryObject ?? [:]
-
-        dict = self.cleanUpPlurals(from: dict)
-        dict = self.cleanUpParams(from: dict)
-
-        return JSON(dict)
+        return FeatureJson(key: feature.key, json: JSON(dict))
     }
 
     private static func cleanUpPlurals(from dict: [String: Any]) -> [String: Any] {
-        return self.remove(suffixes: ["__Plural"], from: dict)
+        remove(suffixes: ["__Plural"], from: dict)
     }
 
     private static func cleanUpParams(from dict: [String: Any]) -> [String: Any] {
@@ -86,7 +75,7 @@ final class JsonImporter {
 
         for each in dict {
             if let value = each.value as? [String: Any] {
-                retVal[each.key] = self.cleanUpParams(from: value)
+                retVal[each.key] = cleanUpParams(from: value)
             } else if let value = each.value as? String {
                 let nsValue = NSString(string: value)
 
@@ -97,12 +86,12 @@ final class JsonImporter {
                 )
                 .map { nsValue.substring(with: $0.range(at: $0.numberOfRanges - 1)) }
                 .reduce(value) { res, param in
-                    return res.replacingOccurrences(of: param, with: "")
+                    res.replacingOccurrences(of: param, with: "")
                 }
             }
         }
 
-        return self.remove(suffixes: ["__Param", "__PluralParam"], from: retVal)
+        return remove(suffixes: ["__Param", "__PluralParam"], from: retVal)
     }
 
     private static func remove(suffixes: [String], from dict: [String: Any]) -> [String: Any] {
@@ -133,49 +122,55 @@ final class JsonImporter {
         return retVal
     }
 
-    private static func localizableContent(from identifier: String, with json: JSON) -> LocalizableContent {
-        let infoPlist = "__InfoPlist"
+    private static func localizableContent(from identifier: String, with allFeatures: AllFeatures) -> LocalizableContent {
+        var strings: [LocalizableContent.StringValue] = allFeatures.features
+            .filter { $0.isInfoPlist == false }
+            .compactMap { feature -> [LocalizableContent.StringValue] in
+                feature.json.compactMap { key, json in
+                    guard let string = json.string else { return nil }
 
-        var strings: [LocalizableContent.StringValue] = json.compactMap { key, json in
-            guard !key.hasSuffix(infoPlist), let stringValue = json.string else {
-                return nil
-            }
-
-            return (key, stringValue)
-        }
-
-        let plurals: [LocalizableContent.PluralValue] = json.compactMap { parentKey, json in
-            guard let dict = json.dictionary else {
-                return nil
-            }
-
-            let values: [LocalizableContent.PluralStringValue] = dict.compactMap { key, json in
-                guard let stringValue = json.string else {
-                    return nil
+                    return (feature.basicKey(for: key), string)
                 }
-
-                return (key: "\(parentKey)_\(key)", pluralFormat: key, value: stringValue)
             }
+            .flatMap { $0 }
 
-            return (parentKey, values)
-        }
+        let plurals: [LocalizableContent.PluralValue] = allFeatures.features
+            .filter { $0.isInfoPlist == false }
+            .compactMap { feature -> [LocalizableContent.PluralValue] in
+                feature.json.compactMap { jsonKey, json in
+                    guard let dict = json.dictionary else {
+                        return nil
+                    }
+
+                    let parentKey = feature.basicKey(for: jsonKey)
+
+                    let values: [LocalizableContent.PluralStringValue] = dict.compactMap { key, json in
+                        guard let string = json.string else { return nil }
+
+                        let pluralKey = feature.pluralKey(with: jsonKey, for: key)
+                        return (pluralKey, key, string)
+                    }
+
+                    return (parentKey, values)
+                }
+            }
+            .flatMap { $0 }
 
         strings += plurals.flatMap {
             $0.values.map { (key: $0.key, value: $0.value) }
         }
 
-        let infoPlistStrings: [LocalizableContent.StringValue] = json.compactMap { key, json in
-            guard key.hasSuffix(infoPlist), let stringValue = json.string else {
-                return nil
+        let infoPlistFeature = allFeatures.features.first(where: { $0.isInfoPlist == true })
+        let infoPlistStrings: [LocalizableContent.StringValue]? = infoPlistFeature?.json
+            .compactMap { key, json in
+                guard let string = json.string else { return nil }
+                return (key, string)
             }
-
-            return (key.replacingOccurrences(of: infoPlist, with: ""), stringValue)
-        }
 
         return LocalizableContent(
             identifier: identifier,
             strings: strings,
-            infoPlistStrings: infoPlistStrings,
+            infoPlistStrings: infoPlistStrings ?? [],
             plurals: plurals
         )
     }
@@ -185,7 +180,7 @@ final class JsonImporter {
         in dest: Folder,
         infoPlistDest: Folder
     ) throws {
-        let lProjFolder = try self.createLProjFolder(from: dest, with: content.identifier)
+        let lProjFolder = try createLProjFolder(from: dest, with: content.identifier)
 
         if let data = self.stringsLocalizableContentData(from: content.strings) {
             try lProjFolder.createFile(named: "Localizable.strings", contents: data)
@@ -209,7 +204,7 @@ final class JsonImporter {
     }
 
     private static func createLProjFolder(from folder: Folder, with identifier: String) throws -> Folder {
-        return try folder.createSubfolder(named: "\(identifier).lproj")
+        try folder.createSubfolder(named: "\(identifier).lproj")
     }
 
     private static func stringsLocalizableContentData(
@@ -288,7 +283,7 @@ final class JsonImporter {
     private static func pluralXMLKeys(
         from value: LocalizableContent.PluralStringValue
     ) -> String {
-        return """
+        """
                     <key>\(value.pluralFormat)</key>
                     <string>\(value.key)</string>
         """
