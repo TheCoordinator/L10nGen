@@ -44,7 +44,7 @@ struct DefaultContentGenerator: FeatureContentGenerating {
                 let stringValues = dictValue
                     .compactMap { "\($0.key): \($0.value.stringValue)" }
                     .sorted()
-                    .joined(separator: "\n\t\t ")
+                    .joined(separator: "\n")
 
                 return self.templates.plural
                     .replacingOccurrences(of: "{Key}", with: key)

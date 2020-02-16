@@ -88,7 +88,7 @@ struct ParamContentGenerator: FeatureContentGenerating {
             return json.dictionaryValue
                 .compactMap { "\($0.key): \($0.value.stringValue)" }
                 .sorted()
-                .joined(separator: "\n\t\t ")
+                .joined(separator: "\n")
         }()
 
         return template
@@ -193,9 +193,9 @@ struct ParamContentGenerator: FeatureContentGenerating {
 
     private func args(from values: [ParamValue], isAttributed: Bool) -> String {
         let retVal = values.map {
-                isAttributed ? "\($0.name)Attributed" : $0.name
-            }
-            .joined(separator: ", ")
+            isAttributed ? "\($0.name)Attributed" : $0.name
+        }
+        .joined(separator: ", ")
 
         return "[\(retVal)]"
     }

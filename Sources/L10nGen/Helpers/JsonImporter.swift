@@ -253,7 +253,8 @@ final class JsonImporter {
         </plist>
         """
 
-        return retVal.data(using: .utf8)
+        let xml = try! XMLDocument(xmlString: retVal, options: .nodePrettyPrint)
+        return xml.xmlData(options: .nodePrettyPrint)
     }
 
     private static func pluralXMLDict(
@@ -261,6 +262,7 @@ final class JsonImporter {
     ) -> String {
         let keys: String = plural.values
             .map(pluralXMLKeys)
+            .sorted()
             .joined(separator: "\n")
 
         return """
@@ -284,8 +286,8 @@ final class JsonImporter {
         from value: LocalizableContent.PluralStringValue
     ) -> String {
         """
-                    <key>\(value.pluralFormat)</key>
-                    <string>\(value.key)</string>
+        <key>\(value.pluralFormat)</key>
+        <string>\(value.key)</string>
         """
     }
 }

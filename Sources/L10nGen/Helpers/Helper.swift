@@ -2,6 +2,7 @@ import Files
 import Foundation
 
 final class Helper {
+    @discardableResult
     static func recreateFolder(in path: String) throws -> Folder {
         guard let folder = try? Folder(path: path) else {
             return try createFolder(in: path)
@@ -11,14 +12,16 @@ final class Helper {
         return try createFolder(in: path)
     }
 
+    @discardableResult
     static func createFolder(in path: String) throws -> Folder {
         try FileManager().createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
         return try Folder(path: path)
     }
 
-    static func createFile(in folder: Folder, fileName: String, contents: String) throws {
+    @discardableResult
+    static func createFile(in folder: Folder, fileName: String, contents: String) throws -> File {
         let data = contents.data(using: .utf8)!
-        try folder.createFile(named: fileName, contents: data)
+        return try folder.createFile(named: fileName, contents: data)
     }
 
     static func envVariable(_ key: String) -> String {
@@ -31,14 +34,6 @@ final class Helper {
 }
 
 extension String {
-    func indented(with spaces: Int = 4) -> String {
-        let indention = (0 ..< spaces).reduce("") { res, _ in "\(res) " }
-        let newLinesIndented = replacingOccurrences(of: "\n",
-                                                    with: "\(indention)\n")
-
-        return "\(indention)\(newLinesIndented)"
-    }
-
     var nilIfEmpty: String? {
         isEmpty ? nil : self
     }

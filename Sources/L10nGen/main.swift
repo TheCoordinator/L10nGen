@@ -25,25 +25,4 @@ let folders = try Folders(config: config)
 let templates = Templates()
 
 try JsonImporter.import(using: folders)
-
-Helper.log("Imported All JSON files")
-
-let baseFeatures = try JsonImporter.baseFeatures(from: folders.jsonResources)
-
-let keysContent = L10nKeysGenerator(
-    allFeatures: baseFeatures,
-    templates: templates
-).generate()
-
-try Helper.createFile(in: folders.sources, fileName: "L10nKeys.swift", contents: keysContent)
-
-Helper.log("Generated All L10n Keys")
-
-let mainContents = L10nContentGenerator(
-    allFeatures: baseFeatures,
-    templates: templates
-).generate()
-
-try Helper.createFile(in: folders.sources, fileName: "L10n.swift", contents: mainContents)
-
-Helper.log("Generated All L10n contents")
+try FileGenerator(folders: folders, templates: templates).generate()

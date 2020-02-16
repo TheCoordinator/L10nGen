@@ -6,7 +6,6 @@ final class Templates {
         """
         import Foundation
 
-        // swiftformat:disable all
         // swiftlint:disable all
 
         public final class L10n {
@@ -31,7 +30,6 @@ final class Templates {
         """
         import Foundation
 
-        // swiftformat:disable all
         // swiftlint:disable all
 
         internal protocol L10nKey {
@@ -52,7 +50,7 @@ final class Templates {
         """
         extension L10nKeys {
             enum {Name}: String, L10nKey {
-        {Cases}
+            {Cases}
             }
         }
         """
@@ -60,65 +58,67 @@ final class Templates {
 
     lazy var basic: String = {
         """
-                /// {Value}
-                public static var {Key}: String {
-                    return L10n.value(for: L10nKeys.{EnumKey})
-                }
+        /**
+         {Value}
+        */
+        public static var {Key}: String {
+            return L10n.value(for: L10nKeys.{EnumKey})
+        }
         """
     }()
 
     lazy var plural: String = {
         """
-                /**
-                 {Value}
-                */
-                public static func {Key}<T: PluralNumberArg>(withPlural plural: T?) -> String {
-                    return L10n.value(for: L10nKeys.{EnumKey}, plural: plural)
-                }
+        /**
+         {Value}
+        */
+        public static func {Key}<T: PluralNumberArg>(withPlural plural: T?) -> String {
+            return L10n.value(for: L10nKeys.{EnumKey}, plural: plural)
+        }
         """
     }()
 
     lazy var param: String = {
         """
-                /**
-                 {Value}
-                */
-                public static func {Key}({ArgInputs}) -> String {
-                    return L10n.value(for: L10nKeys.{EnumKey}, args: {Args})
-                }
+        /**
+         {Value}
+        */
+        public static func {Key}({ArgInputs}) -> String {
+            return L10n.value(for: L10nKeys.{EnumKey}, args: {Args})
+        }
         """
     }()
 
     lazy var pluralParam: String = {
         """
-                /**
-                 {Value}
-                */
-                public static func {Key}<T: PluralNumberArg>(withPlural plural: T?, {ArgInputs}) -> String {
-                    return L10n.value(for: L10nKeys.{EnumKey}, args: {Args}, plural: plural)
-                }
+        /**
+         {Value}
+        */
+        public static func {Key}<T: PluralNumberArg>(withPlural plural: T?, {ArgInputs}) -> String {
+            return L10n.value(for: L10nKeys.{EnumKey}, args: {Args}, plural: plural)
+        }
         """
     }()
 
     lazy var paramAttr: String = {
         """
-                /**
-                 {Value}
-                */
-                public static func {Key}({ArgInputs}) -> L10nAttributed {
-                    return L10nAttributed.from(key: L10nKeys.{EnumKey}, args: {Args})
-                }
+        /**
+         {Value}
+        */
+        public static func {Key}({ArgInputs}) -> L10nAttributed {
+            return L10nAttributed.from(key: L10nKeys.{EnumKey}, args: {Args})
+        }
         """
     }()
 
     lazy var pluralParamAttr: String = {
         """
-                /**
-                 {Value}
-                */
-                public static func {Key}<T: PluralNumberArg>(withPlural plural: T?, {ArgInputs}) -> L10nAttributed {
-                    return L10nAttributed.from(key: L10nKeys.{EnumKey}, args: {Args}, plural: plural)
-                }
+        /**
+         {Value}
+        */
+        public static func {Key}<T: PluralNumberArg>(withPlural plural: T?, {ArgInputs}) -> L10nAttributed {
+            return L10nAttributed.from(key: L10nKeys.{EnumKey}, args: {Args}, plural: plural)
+        }
         """
     }()
 }

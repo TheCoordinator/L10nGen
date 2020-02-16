@@ -13,7 +13,7 @@ struct L10nKeysGenerator: L10nContentGenerating {
             .map { FeatureKeysGenerator(feature: $0, templates: templates) }
 
         let content = generators
-            .sorted { $0.feature.key > $1.feature.key }
+            .sorted { $0.feature.key < $1.feature.key }
             .map { $0.generate() }
             .sorted()
             .joined(separator: "\n\n")

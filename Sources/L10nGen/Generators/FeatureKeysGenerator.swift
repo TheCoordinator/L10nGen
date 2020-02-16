@@ -32,8 +32,9 @@ struct FeatureKeysGenerator: FeatureContentGenerating {
 
     private func replacedTemplateData(keyValues: [KeyValue]) -> String {
         let cases = keyValues
+            .sorted { $0.key < $1.key }
             .compactMap {
-                "\t\tcase \($0.key) = \"\($0.value)\""
+                "case \($0.key) = \"\($0.value)\""
             }
             .joined(separator: "\n")
 

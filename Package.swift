@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/JohnSundell/Files.git", from: "4.1.1"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "2.0.0"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat.git", from: "0.44.2"),
     ],
     targets: [
         .target(
@@ -24,6 +25,7 @@ let package = Package(
                 "Files",
                 "SwiftyJSON",
                 "Yams",
+                "SwiftFormat",
             ]
         ),
     ]
