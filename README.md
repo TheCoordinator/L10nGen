@@ -1,4 +1,4 @@
-# Loco iOS L10n Generator
+# iOS L10n Generator
 
 A command line tool to generate localisation files and sources for Loco iOS Loco App.
 
@@ -9,13 +9,13 @@ Best way to install is via mint
 ### [Mint](https://github.com/yonaskolb/mint)
 
 ```sh
-$ mint install https://github.com/peymankh/L10nGen.git@1.0.0
+$ mint install https://github.com/TheCoordinator/L10nGen.git@1.0.0
 ```
 
 Or via `Mintfile`
 
 ```
-https://github.com/peymankh/L10nGen.git@1.0.0
+https://github.com/TheCoordinator/L10nGen.git@1.0.0
 ```
 
 ### [Swift Package Manager](https://github.com/apple/swift-package-manager)
@@ -23,7 +23,7 @@ https://github.com/peymankh/L10nGen.git@1.0.0
 **Use CLI**
 
 ```sh
-$ git clone https://github.com/peymankh/L10Gen.git
+$ git clone https://github.com/TheCoordinator/L10Gen.git
 $ cd L10nGen
 $ swift run L10nGen --config .l10ngen.yml
 ```
@@ -33,7 +33,7 @@ $ swift run L10nGen --config .l10ngen.yml
 ### Mint
 
 ```sh
-mint run peymankh L10nGen --config .l10ngen.yml
+mint run TheCoordinator L10nGen --config .l10ngen.yml
 ```
 
 ### Swift Package Manager
