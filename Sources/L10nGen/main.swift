@@ -11,11 +11,11 @@ enum L10nGenCLIError: Error {
 
 let args = CommandLine.arguments
 
-guard let configIndex = args.firstIndex(of: "--config") else {
+guard let configIndex: Int = args.firstIndex(of: "--config") else {
     throw L10nGenCLIError.configMissing
 }
 
-let configPath = args[configIndex + 1]
+let configPath: String = args[configIndex + 1]
 let configFile = try File(path: configPath)
 let configContent = try configFile.readAsString()
 

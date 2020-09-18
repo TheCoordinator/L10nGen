@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -15,8 +15,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/JohnSundell/Files.git", from: "4.1.1"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0"),
-        .package(url: "https://github.com/jpsim/Yams.git", from: "2.0.0"),
-        .package(url: "https://github.com/nicklockwood/SwiftFormat.git", from: "0.44.2"),
+        .package(url: "https://github.com/jpsim/Yams.git", from: "4.0.0"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat.git", from: "0.46.2"),
     ],
     targets: [
         .target(
