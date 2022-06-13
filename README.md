@@ -1,6 +1,6 @@
 # iOS L10n Generator
 
-A command line tool to generate localisation files and sources for Loco iOS Loco App.
+A command line tool to generate localisation files and sources for iOS Apps.
 
 ## Installation
 
